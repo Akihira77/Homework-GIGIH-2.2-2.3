@@ -1,24 +1,14 @@
 import { Router } from "express";
-import IRouter from "./IRouter.js";
 
 // Controllers
-import UserController from "../controllers/UserController.js";
+import BaseController from "../controllers/BaseController.js";
+import User from "../models/User.js";
 
-class UserRoutes implements IRouter {
-  public router: Router;
+const router = Router();
 
-  constructor() {
-    this.router = Router();
-    this.routes();
-  }
+router.get("/get-all", BaseController.GetAll(User, "songs"));
+router.get("/get-by-id/:id", BaseController.GetById(User, "songs"));
+router.post("/create", BaseController.Create(User));
+router.delete("/delete/:id", BaseController.Delete(User));
 
-  public routes(): void {
-    this.router.get("/", UserController.GetAll);
-    this.router.get("/:id", UserController.Get);
-    this.router.post("/", UserController.Create);
-    this.router.put("/:id", UserController.Update);
-    this.router.delete("/:id", UserController.Delete);
-  }
-}
-
-export default new UserRoutes().router;
+export default router;

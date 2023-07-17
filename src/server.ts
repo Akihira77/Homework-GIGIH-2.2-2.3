@@ -4,6 +4,7 @@ import compression from "compression";
 import cors from "cors";
 import helmet from "helmet";
 import UserRoutes from "./routers/UserRoutes.js";
+import db from "./data/db.js";
 
 class App {
   public app: Application;
@@ -40,6 +41,8 @@ class App {
 
 const port: Number = 3000;
 const app = new App().app;
+
+db();
 
 app.listen(port, () => {
   console.log(`server is running on port ${3000}`);

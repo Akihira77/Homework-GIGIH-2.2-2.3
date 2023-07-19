@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, modelNames } from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
 import { Request, Response } from "express";
 
 const Create = (model: Model<any>) => (req: Request, res: Response) => {

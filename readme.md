@@ -1,9 +1,78 @@
-import { Request, Response } from "express";
-import Playlist from "../models/Playlist.js";
-import { Schema, Types } from "mongoose";
-import Song from "../models/Song.js";
-import User from "../models/User.js";
+# Model
 
+### User
+
+```TS
+interface IUser extends Document {
+  name: string;
+  age: number;
+  songs: Schema.Types.ObjectId[];
+}
+
+const UserSchema = new Schema<IUser>({
+  name: { type: String, required: true },
+  age: { type: Number, required: true },
+  songs: [{ type: Schema.Types.ObjectId, ref: Song }],
+});
+```
+
+### Song
+
+```TS
+interface ISong extends Document {
+  title: string;
+  artists: Schema.Types.ObjectId[];
+  url: string;
+  countPlayed: number;
+}
+
+const SongSchema = new Schema<ISong>({
+  title: { type: String, required: true },
+  artists: [{ type: Schema.Types.ObjectId, ref: Artist }],
+  url: { type: String, required: true },
+  countPlayed: { type: Number },
+});
+```
+
+### Artist
+
+```TS
+interface IArtist extends Document {
+  name: string;
+  age: number;
+}
+
+const ArtistSchema = new Schema<IArtist>({
+  name: { type: String, required: true },
+  age: { type: Number, required: true },
+});
+```
+
+### Playlist
+
+```TS
+interface IPlaylist extends Document {
+  namePlaylist: string;
+  userId: Schema.Types.ObjectId;
+  songs: Schema.Types.ObjectId[];
+}
+
+const PlaylistSchema = new Schema<IPlaylist>({
+  namePlaylist: { type: String, required: true },
+  userId: { type: Schema.Types.ObjectId, required: true },
+  songs: [{ type: Schema.Types.ObjectId, ref: Song }],
+});
+```
+
+# Endpoints & Controller
+
+### Create Playlist
+
+```
+router.post("/create/:id", PlaylistController.Create());
+```
+
+```TS
 const Create = () => async (req: Request, res: Response) => {
   const namePlaylist = req.body.namePlaylist;
 
@@ -30,39 +99,15 @@ const Create = () => async (req: Request, res: Response) => {
     .then((result: any) => res.status(201).json({ result }))
     .catch((error: any) => res.status(500).json({ error }));
 };
+```
 
-const AddSongToPlaylist = () => async (req: Request, res: Response) => {
-  const id = req.params.id;
-  const songId = req.body.songId;
+### Get Playlist
 
-  try {
-    const song = await Song.findById(songId);
-    if (song == null) {
-      console.log("song is not found");
-      return res.status(404).json({ message: "song is not found" });
-    }
+```TS
+router.get("/get-playlist/:id", PlaylistController.GetPlaylist("songs"));
+```
 
-    console.log("song " + song);
-
-    const playlist = await Playlist.findById(id);
-    if (playlist == null) {
-      console.log("playlist is not found");
-      return res.status(404).json({ message: "playlist is not found" });
-    }
-
-    console.log("playlist " + playlist);
-
-    await playlist.updateOne({ $push: { songs: song } });
-
-    return res
-      .status(200)
-      .json({ message: "adding song to your playlist is success" });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ error });
-  }
-};
-
+```TS
 const GetPlaylist = (populate: string) => (req: Request, res: Response) => {
   const id = req.params.id;
   console.log("Getting all documents " + id);
@@ -78,7 +123,17 @@ const GetPlaylist = (populate: string) => (req: Request, res: Response) => {
       return res.status(500).json({ error });
     });
 };
+```
 
+### Play Song or Get Song From Playlist
+
+```TS
+router.get("/get-song-from-playlist/:id",
+  PlaylistController.GetSongFromPlaylist("artists")
+);
+```
+
+```TS
 const GetSongFromPlaylist =
   (populate: string) => async (req: Request, res: Response) => {
     const playlistId = req.params.id;
@@ -114,5 +169,23 @@ const GetSongFromPlaylist =
       return res.status(500).json({ error });
     }
   };
+```
 
-export default { GetPlaylist, Create, AddSongToPlaylist, GetSongFromPlaylist };
+### Get List of Songs Sorted by Count Played
+
+```TS
+router.get("/get-sorted-songs", SongController.GetListOfSongBeSorted());
+```
+
+```TS
+const GetListOfSongBeSorted = () => async (req: Request, res: Response) => {
+  try {
+    const songs = await Song.find().sort({ countPlayed: "desc" });
+    console.log(songs);
+    return res.status(200).json({ songs });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error });
+  }
+};
+```
